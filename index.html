@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Астроскоп - Ваш ежедневный гороскоп</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Астроскоп</h1>
+        <form id="horoscopeForm">
+            <div class="input-type">
+                <label>
+                    <input type="radio" name="input_type" value="sign" checked>
+                    Выбрать знак зодиака
+                </label>
+                <label>
+                    <input type="radio" name="input_type" value="date">
+                    Ввести дату рождения
+                </label>
+            </div>
+
+            <div id="sign-input" class="input-field">
+                <select id="sign-select" name="zodiac_sign">
+                    <option value="">Выберите знак зодиака</option>
+                    <option value="aries">Овен</option>
+                    <option value="taurus">Телец</option>
+                    <option value="gemini">Близнецы</option>
+                    <option value="cancer">Рак</option>
+                    <option value="leo">Лев</option>
+                    <option value="virgo">Дева</option>
+                    <option value="libra">Весы</option>
+                    <option value="scorpio">Скорпион</option>
+                    <option value="sagittarius">Стрелец</option>
+                    <option value="capricorn">Козерог</option>
+                    <option value="aquarius">Водолей</option>
+                    <option value="pisces">Рыбы</option>
+                </select>
+            </div>
+
+            <div id="date-input" class="input-field hidden">
+                <input type="date" id="birth-date-input" name="birth_date">
+            </div>
+
+            <button type="submit" class="submit-button">Получить гороскоп</button>
+        </form>
+
+        <div id="ad-container" class="ad-container"></div>
+        <div id="horoscope-container" class="horoscope-container"></div>
+    </div>
+    <script type="module" src="script.js"></script>
+</body>
+</html> 

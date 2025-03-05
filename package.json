@@ -1,0 +1,27 @@
+{
+  "name": "astroscope-webapp",
+  "version": "1.0.0",
+  "description": "Веб-приложение для получения ежедневных гороскопов в Telegram",
+  "main": "script.js",
+  "scripts": {
+    "start": "parcel index.html",
+    "build": "parcel build index.html --public-url ./",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3"
+  },
+  "devDependencies": {
+    "parcel-bundler": "^1.12.5",
+    "gh-pages": "^3.2.3"
+  },
+  "keywords": [
+    "telegram",
+    "webapp",
+    "horoscope",
+    "astrology"
+  ],
+  "author": "",
+  "license": "ISC"
+} 
