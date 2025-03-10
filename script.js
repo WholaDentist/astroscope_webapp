@@ -1,5 +1,5 @@
-// Импорт данных гороскопов
-import horoscopeData from './horoscope-data.js';
+// Импорт данных гороскопов больше не нужен
+// import horoscopeData from './horoscope-data.js';
 
 // Инициализация Telegram WebApp
 const tg = window.Telegram.WebApp;
@@ -41,6 +41,105 @@ function getZodiacSign(day, month) {
     if ((month == 12 && day >= 22) || (month == 1 && day <= 19)) return "capricorn";
 }
 
+// Функция получения реального гороскопа через API
+async function getHoroscope(sign) {
+    try {
+        console.log('Получаем гороскоп для знака:', sign);
+        
+        const response = await fetch('https://aztro.sameerkumar.website/?' + new URLSearchParams({
+            sign: sign,
+            day: 'today'
+        }), {
+            method: 'POST'
+        });
+
+        if (!response.ok) {
+            throw new Error('Ошибка при получении гороскопа');
+        }
+
+        const data = await response.json();
+        
+        // Переводим описание с помощью второго API запроса
+        const translateResponse = await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ru&dt=t&q=' + encodeURIComponent(data.description));
+        const translatedData = await translateResponse.json();
+        const translatedDescription = translatedData[0][0][0];
+
+        const horoscope = `
+🌟 Гороскоп на ${new Date().toLocaleDateString('ru-RU', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+})}
+
+${translatedDescription}
+
+💫 Счастливое число: ${data.lucky_number}
+🎨 Цвет удачи: ${translateColor(data.color)}
+💝 Совместимость: ${getZodiacSignName(data.compatibility)}
+🌺 Настроение: ${translateMood(data.mood)}
+`;
+        
+        console.log('Сформированный гороскоп:', horoscope);
+        return horoscope;
+    } catch (error) {
+        console.error('Ошибка при получении гороскопа:', error);
+        throw error;
+    }
+}
+
+// Функция перевода цветов
+function translateColor(color) {
+    const colors = {
+        'Red': 'Красный',
+        'Blue': 'Синий',
+        'Green': 'Зеленый',
+        'Yellow': 'Желтый',
+        'Purple': 'Фиолетовый',
+        'Pink': 'Розовый',
+        'Orange': 'Оранжевый',
+        'Brown': 'Коричневый',
+        'White': 'Белый',
+        'Black': 'Черный',
+        'Gold': 'Золотой',
+        'Silver': 'Серебряный'
+    };
+    return colors[color] || color;
+}
+
+// Функция перевода настроения
+function translateMood(mood) {
+    const moods = {
+        'Happy': 'Радостное',
+        'Calm': 'Спокойное',
+        'Romantic': 'Романтичное',
+        'Energetic': 'Энергичное',
+        'Peaceful': 'Умиротворенное',
+        'Thoughtful': 'Задумчивое',
+        'Excited': 'Взволнованное',
+        'Relaxed': 'Расслабленное'
+    };
+    return moods[mood] || mood;
+}
+
+// Функция получения названия знака на русском
+function getZodiacSignName(sign) {
+    const signs = {
+        'Aries': 'Овен',
+        'Taurus': 'Телец',
+        'Gemini': 'Близнецы',
+        'Cancer': 'Рак',
+        'Leo': 'Лев',
+        'Virgo': 'Дева',
+        'Libra': 'Весы',
+        'Scorpio': 'Скорпион',
+        'Sagittarius': 'Стрелец',
+        'Capricorn': 'Козерог',
+        'Aquarius': 'Водолей',
+        'Pisces': 'Рыбы'
+    };
+    return signs[sign] || sign;
+}
+
 // Функция показа рекламы
 function showAd() {
     adContainer.innerHTML = `
@@ -56,33 +155,8 @@ function showAd() {
     `;
 }
 
-// Функция получения гороскопа
-function getHoroscope(sign) {
-    try {
-        console.log('Получаем гороскоп для знака:', sign);
-        const data = horoscopeData[sign];
-        
-        if (!data) {
-            throw new Error('Неверный знак зодиака');
-        }
-
-        const currentDate = new Date().toLocaleDateString('ru-RU', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-
-        const horoscope = `🌟 Гороскоп на ${currentDate}:\n\n${data.description}\n\n💫 Счастливое число: ${data.lucky_number}\n🎨 Цвет удачи: ${data.color}\n💝 Совместимость: ${data.compatibility}`;
-        console.log('Сформированный гороскоп:', horoscope);
-        return horoscope;
-    } catch (error) {
-        console.error('Ошибка при получении гороскопа:', error);
-        throw error;
-    }
-}
-
 // Обработка отправки формы
-form.addEventListener('submit', (e) => {
+form.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     let sign;
@@ -106,23 +180,30 @@ form.addEventListener('submit', (e) => {
 
     // Показываем рекламу
     showAd();
-    horoscopeContainer.textContent = 'Загрузка гороскопа...';
+    horoscopeContainer.innerHTML = '<div class="loading">Получаем ваш гороскоп... ⌛</div>';
 
     try {
-        const horoscope = getHoroscope(sign);
+        const horoscope = await getHoroscope(sign);
         horoscopeContainer.innerHTML = horoscope.replace(/\n/g, '<br>');
         
-        // Уведомляем Telegram о изменении высоты контента
-        tg.MainButton.setText('Поделиться');
+        // Показываем кнопку "Отправить в Telegram"
+        tg.MainButton.setText('Отправить в Telegram');
         tg.MainButton.show();
+        
+        // Сохраняем данные для отправки
+        window.horoscopeData = {
+            sign: sign,
+            text: horoscope
+        };
     } catch (error) {
-        console.error('Ошибка при получении гороскопа:', error);
-        horoscopeContainer.textContent = `Произошла ошибка: ${error.message}`;
+        console.error('Ошибка:', error);
+        horoscopeContainer.textContent = 'Произошла ошибка при получении гороскопа. Попробуйте позже.';
     }
 });
 
-// Обработка кнопки "Поделиться"
+// Обработка кнопки "Отправить в Telegram"
 tg.MainButton.onClick(() => {
-    const horoscope = horoscopeContainer.textContent;
-    tg.sendData(horoscope);
+    if (window.horoscopeData) {
+        tg.sendData(JSON.stringify(window.horoscopeData));
+    }
 }); 
