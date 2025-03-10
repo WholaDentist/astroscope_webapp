@@ -14,7 +14,7 @@ const adContainer = document.getElementById('ad-container');
 
 // Конфигурация Gemini API
 const GEMINI_API_KEY = 'AIzaSyDZgKbAd317FGSdRDzDu9-kuXMYohx1Z-I';
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=' + GEMINI_API_KEY;
 
 // Переключение между типами ввода
 document.querySelectorAll('input[name="input_type"]').forEach(radio => {
@@ -222,25 +222,41 @@ async function getHoroscopeFromGemini(sign) {
     Добавь в конце счастливое число (от 1 до 100) и цвет удачи.`;
 
     try {
-        const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+        console.log('Отправляем запрос к Gemini API...');
+        const response = await fetch(GEMINI_API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
+                model: "gemini-pro",
                 contents: [{
                     parts: [{
                         text: prompt
                     }]
-                }]
+                }],
+                generationConfig: {
+                    temperature: 0.7,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 1024,
+                }
             })
         });
 
+        console.log('Получен ответ от API:', response.status);
+        const responseText = await response.text();
+        console.log('Тело ответа:', responseText);
+
         if (!response.ok) {
-            throw new Error('Ошибка при получении гороскопа');
+            throw new Error(`Ошибка API: ${response.status} ${responseText}`);
         }
 
-        const data = await response.json();
+        const data = JSON.parse(responseText);
+        if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
+            throw new Error('Некорректный формат ответа от API');
+        }
+
         const generatedText = data.candidates[0].content.parts[0].text;
 
         // Форматируем ответ
@@ -253,7 +269,9 @@ async function getHoroscopeFromGemini(sign) {
         return `🌟 Гороскоп на ${currentDate}\nдля знака ${getZodiacSignName(sign)}\n\n${generatedText}`;
     } catch (error) {
         console.error('Ошибка при получении гороскопа:', error);
-        throw error;
+        // Если произошла ошибка, используем локальную генерацию
+        console.log('Используем локальную генерацию как запасной вариант');
+        return generateHoroscope(sign);
     }
 }
 
