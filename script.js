@@ -12,6 +12,10 @@ const dateInput = document.getElementById('date-input');
 const horoscopeContainer = document.getElementById('horoscope-container');
 const adContainer = document.getElementById('ad-container');
 
+// Конфигурация Gemini API
+const GEMINI_API_KEY = 'AIzaSyDZgKbAd317FGSdRDzDu9-kuXMYohx1Z-I';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+
 // Переключение между типами ввода
 document.querySelectorAll('input[name="input_type"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
@@ -41,16 +45,195 @@ function getZodiacSign(day, month) {
     if ((month == 12 && day >= 22) || (month == 1 && day <= 19)) return "capricorn";
 }
 
-// Функция получения реального гороскопа через API
-async function getHoroscope(sign) {
+// База предсказаний для каждой сферы жизни
+const predictions = {
+    love: [
+        "Сегодня звезды благоприятствуют романтическим отношениям",
+        "Хороший день для новых знакомств",
+        "Возможны неожиданные повороты в личной жизни",
+        "Прекрасное время для укрепления существующих отношений",
+        "День подходит для романтического свидания"
+    ],
+    career: [
+        "Благоприятный период для карьерного роста",
+        "Возможно поступление интересного делового предложения",
+        "Хороший день для важных переговоров",
+        "Ваши профессиональные навыки будут высоко оценены",
+        "Подходящее время для новых проектов"
+    ],
+    health: [
+        "Отличный день для начала здорового образа жизни",
+        "Уделите внимание своему здоровью и самочувствию",
+        "Энергетический потенциал на высоком уровне",
+        "Хорошее время для физической активности",
+        "День подходит для восстановления сил"
+    ],
+    finance: [
+        "Благоприятный день для финансовых операций",
+        "Возможны неожиданные денежные поступления",
+        "Хорошее время для планирования бюджета",
+        "Удачный период для инвестиций",
+        "Будьте внимательны к финансовым возможностям"
+    ]
+};
+
+// Характеристики знаков
+const signCharacteristics = {
+    aries: {
+        element: "Огонь",
+        planet: "Марс",
+        characteristics: "энергичность, лидерство, энтузиазм"
+    },
+    taurus: {
+        element: "Земля",
+        planet: "Венера",
+        characteristics: "надежность, практичность, упорство"
+    },
+    gemini: {
+        element: "Воздух",
+        planet: "Меркурий",
+        characteristics: "общительность, любознательность, адаптивность"
+    },
+    cancer: {
+        element: "Вода",
+        planet: "Луна",
+        characteristics: "чувствительность, интуиция, забота"
+    },
+    leo: {
+        element: "Огонь",
+        planet: "Солнце",
+        characteristics: "творчество, благородство, уверенность"
+    },
+    virgo: {
+        element: "Земля",
+        planet: "Меркурий",
+        characteristics: "аналитичность, практичность, внимание к деталям"
+    },
+    libra: {
+        element: "Воздух",
+        planet: "Венера",
+        characteristics: "дипломатичность, справедливость, гармония"
+    },
+    scorpio: {
+        element: "Вода",
+        planet: "Плутон",
+        characteristics: "страстность, проницательность, решительность"
+    },
+    sagittarius: {
+        element: "Огонь",
+        planet: "Юпитер",
+        characteristics: "оптимизм, свобода, философский взгляд"
+    },
+    capricorn: {
+        element: "Земля",
+        planet: "Сатурн",
+        characteristics: "амбициозность, ответственность, дисциплина"
+    },
+    aquarius: {
+        element: "Воздух",
+        planet: "Уран",
+        characteristics: "оригинальность, независимость, дружелюбие"
+    },
+    pisces: {
+        element: "Вода",
+        planet: "Нептун",
+        characteristics: "интуиция, творчество, сострадание"
+    }
+};
+
+// Функция получения случайного элемента из массива
+function getRandomElement(array) {
+    return array[Math.floor(Math.random() * array.length)];
+}
+
+// Функция генерации гороскопа
+function generateHoroscope(sign) {
+    const signInfo = signCharacteristics[sign];
+    const currentDate = new Date().toLocaleDateString('ru-RU', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    const horoscope = `
+🌟 Гороскоп на ${currentDate}
+для знака ${getZodiacSignName(sign)}
+
+⭐️ Общая характеристика:
+Стихия: ${signInfo.element}
+Планета: ${signInfo.planet}
+Ключевые качества: ${signInfo.characteristics}
+
+💝 Любовь и отношения:
+${getRandomElement(predictions.love)}
+
+💼 Карьера и работа:
+${getRandomElement(predictions.career)}
+
+❤️ Здоровье и самочувствие:
+${getRandomElement(predictions.health)}
+
+💰 Финансы:
+${getRandomElement(predictions.finance)}
+
+🎲 Счастливое число: ${Math.floor(Math.random() * 100)}
+🎨 Цвет удачи: ${getRandomElement(['Красный', 'Синий', 'Зеленый', 'Фиолетовый', 'Золотой', 'Серебряный'])}
+`;
+
+    return horoscope;
+}
+
+// Функция получения названия знака на русском
+function getZodiacSignName(sign) {
+    const signs = {
+        'aries': 'Овен',
+        'taurus': 'Телец',
+        'gemini': 'Близнецы',
+        'cancer': 'Рак',
+        'leo': 'Лев',
+        'virgo': 'Дева',
+        'libra': 'Весы',
+        'scorpio': 'Скорпион',
+        'sagittarius': 'Стрелец',
+        'capricorn': 'Козерог',
+        'aquarius': 'Водолей',
+        'pisces': 'Рыбы'
+    };
+    return signs[sign] || sign;
+}
+
+// Функция получения гороскопа через Gemini API
+async function getHoroscopeFromGemini(sign) {
+    const signInfo = signCharacteristics[sign];
+    const prompt = `Сгенерируй детальный гороскоп на сегодня для знака ${getZodiacSignName(sign)}.
+    Учти следующие характеристики знака:
+    - Стихия: ${signInfo.element}
+    - Планета: ${signInfo.planet}
+    - Ключевые качества: ${signInfo.characteristics}
+    
+    Гороскоп должен включать:
+    1. Общий прогноз на день
+    2. Любовь и отношения
+    3. Карьера и работа
+    4. Здоровье и самочувствие
+    5. Финансы
+    
+    Формат должен быть позитивным, но реалистичным. Используй эмодзи для каждого раздела.
+    Добавь в конце счастливое число (от 1 до 100) и цвет удачи.`;
+
     try {
-        console.log('Получаем гороскоп для знака:', sign);
-        
-        const response = await fetch('https://aztro.sameerkumar.website/?' + new URLSearchParams({
-            sign: sign,
-            day: 'today'
-        }), {
-            method: 'POST'
+        const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }]
+            })
         });
 
         if (!response.ok) {
@@ -58,86 +241,20 @@ async function getHoroscope(sign) {
         }
 
         const data = await response.json();
-        
-        // Переводим описание с помощью второго API запроса
-        const translateResponse = await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ru&dt=t&q=' + encodeURIComponent(data.description));
-        const translatedData = await translateResponse.json();
-        const translatedDescription = translatedData[0][0][0];
+        const generatedText = data.candidates[0].content.parts[0].text;
 
-        const horoscope = `
-🌟 Гороскоп на ${new Date().toLocaleDateString('ru-RU', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-})}
+        // Форматируем ответ
+        const currentDate = new Date().toLocaleDateString('ru-RU', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
 
-${translatedDescription}
-
-💫 Счастливое число: ${data.lucky_number}
-🎨 Цвет удачи: ${translateColor(data.color)}
-💝 Совместимость: ${getZodiacSignName(data.compatibility)}
-🌺 Настроение: ${translateMood(data.mood)}
-`;
-        
-        console.log('Сформированный гороскоп:', horoscope);
-        return horoscope;
+        return `🌟 Гороскоп на ${currentDate}\nдля знака ${getZodiacSignName(sign)}\n\n${generatedText}`;
     } catch (error) {
         console.error('Ошибка при получении гороскопа:', error);
         throw error;
     }
-}
-
-// Функция перевода цветов
-function translateColor(color) {
-    const colors = {
-        'Red': 'Красный',
-        'Blue': 'Синий',
-        'Green': 'Зеленый',
-        'Yellow': 'Желтый',
-        'Purple': 'Фиолетовый',
-        'Pink': 'Розовый',
-        'Orange': 'Оранжевый',
-        'Brown': 'Коричневый',
-        'White': 'Белый',
-        'Black': 'Черный',
-        'Gold': 'Золотой',
-        'Silver': 'Серебряный'
-    };
-    return colors[color] || color;
-}
-
-// Функция перевода настроения
-function translateMood(mood) {
-    const moods = {
-        'Happy': 'Радостное',
-        'Calm': 'Спокойное',
-        'Romantic': 'Романтичное',
-        'Energetic': 'Энергичное',
-        'Peaceful': 'Умиротворенное',
-        'Thoughtful': 'Задумчивое',
-        'Excited': 'Взволнованное',
-        'Relaxed': 'Расслабленное'
-    };
-    return moods[mood] || mood;
-}
-
-// Функция получения названия знака на русском
-function getZodiacSignName(sign) {
-    const signs = {
-        'Aries': 'Овен',
-        'Taurus': 'Телец',
-        'Gemini': 'Близнецы',
-        'Cancer': 'Рак',
-        'Leo': 'Лев',
-        'Virgo': 'Дева',
-        'Libra': 'Весы',
-        'Scorpio': 'Скорпион',
-        'Sagittarius': 'Стрелец',
-        'Capricorn': 'Козерог',
-        'Aquarius': 'Водолей',
-        'Pisces': 'Рыбы'
-    };
-    return signs[sign] || sign;
 }
 
 // Функция показа рекламы
@@ -180,10 +297,10 @@ form.addEventListener('submit', async (e) => {
 
     // Показываем рекламу
     showAd();
-    horoscopeContainer.innerHTML = '<div class="loading">Получаем ваш гороскоп... ⌛</div>';
+    horoscopeContainer.innerHTML = '<div class="loading">Составляем ваш гороскоп... ⌛</div>';
 
     try {
-        const horoscope = await getHoroscope(sign);
+        const horoscope = await getHoroscopeFromGemini(sign);
         horoscopeContainer.innerHTML = horoscope.replace(/\n/g, '<br>');
         
         // Показываем кнопку "Отправить в Telegram"
